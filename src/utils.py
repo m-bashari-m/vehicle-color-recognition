@@ -16,7 +16,7 @@ class ModelCreator():
         self.metrics = [
             keras.metrics.Precision(name="precision"),
             keras.metrics.Recall(name="recall"),
-            keras.metrics.AUC(name='auc', curve='PR'),
+            keras.metrics.AUC(name='auc', curve='PR', multi_label=True),
             keras.metrics.Accuracy()
         ]
 
