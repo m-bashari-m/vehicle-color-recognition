@@ -171,3 +171,6 @@ def get_class_weight():
                 key, value in zip(df['color'].index, (n_train/df['train']).round(2))}
 
     return df['color'], class_weight
+
+
+
