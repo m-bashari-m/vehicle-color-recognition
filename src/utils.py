@@ -6,6 +6,7 @@ import numpy as np
 from tqdm.notebook import tqdm_notebook as tqn
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 class ModelCreator():
     def __init__(self, hub_module_url, model_name):
@@ -62,22 +63,6 @@ class ModelCreator():
         callbacks = [early_stopping, check_point]
         return callbacks
 
-
-
-def get_train_val_ds(train_dir, val_dir, batch_size=64, img_size=(512,512), seed=42, shuffle=True):
-    train_ds = keras.utils.image_dataset_from_directory(train_dir,
-                                                    batch_size=batch_size,
-                                                    image_size=img_size,
-                                                    shuffle=shuffle,
-                                                    seed=seed)
-
-    val_ds = keras.utils.image_dataset_from_directory(val_dir,
-                                                  batch_size=batch_size,
-                                                  image_size=img_size,
-                                                  shuffle=shuffle,
-                                                  seed=seed)
-
-    return train_ds, val_ds
 
 
 class ErrorAnalyzer():
@@ -157,3 +142,30 @@ class ErrorAnalyzer():
         precision = self.conf_mat[class_num, class_num] / self.conf_mat.sum(axis=0)[class_num]
         recall = self.conf_mat[class_num, class_num] / self.conf_mat.sum(axis=1)[class_num]
         return precision, recall
+
+
+def get_train_val_ds(train_dir, val_dir, batch_size=64, img_size=(512,512), seed=42, shuffle=True):
+    train_ds = keras.utils.image_dataset_from_directory(train_dir,
+                                                    batch_size=batch_size,
+                                                    image_size=img_size,
+                                                    shuffle=shuffle,
+                                                    seed=seed)
+
+    val_ds = keras.utils.image_dataset_from_directory(val_dir,
+                                                  batch_size=batch_size,
+                                                  image_size=img_size,
+                                                  shuffle=shuffle,
+                                                  seed=seed)
+
+    return train_ds, val_ds
+
+
+def get_class_weight():
+    url = https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv
+    df = pd.read_csv(url, index_col=0)
+
+    n_train = np.sum(df['train'])
+    class_weight = {key:value for
+                key, value in zip(df['color'].index, (n_train/df['train']).round(2))}
+
+    return class_weight
