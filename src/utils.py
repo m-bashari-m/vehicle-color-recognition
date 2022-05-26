@@ -33,12 +33,12 @@ class ModelCreator():
             self.bit_module,
             keras.layers.Dense(600),
             keras.layers.Dropout(.3),
-            keras.layers.Dense(n_classes)
+            keras.layers.Dense(n_classes, activation='softmax')
         ])
         
         model._name = self.model_name
         
-        loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+        loss_fn = keras.losses.CategoricalCrossentropy()
         lr_schedule = keras.optimizers.schedules.ExponentialDecay(
                                                             initial_learning_rate=init_lr,
                                                             decay_steps=decay_steps,
@@ -153,12 +153,14 @@ def get_train_val_ds(train_dir, val_dir, batch_size=64, img_size=(512,512), seed
                                                     batch_size=batch_size,
                                                     image_size=img_size,
                                                     shuffle=shuffle,
+                                                    label_mode='categorical',
                                                     seed=seed)
 
     val_ds = keras.utils.image_dataset_from_directory(val_dir,
                                                   batch_size=batch_size,
                                                   image_size=img_size,
                                                   shuffle=shuffle,
+                                                  label_mode='categorical',
                                                   seed=seed)
 
     return train_ds, val_ds
