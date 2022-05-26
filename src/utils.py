@@ -54,7 +54,7 @@ class ModelCreator():
                                                     patience=5,
                                                     mode='max')
 
-        check_point_path = os.path.join('./logs/checkpoints', self.model_name)
+        check_point_path = os.path.join('./logs/checkpoints', self.model_name+"{-epochs}.h5")
         check_point = keras.callbacks.ModelCheckpoint(
                                                     filepath=check_point_path,
                                                     monitor='auc',
