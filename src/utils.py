@@ -75,7 +75,7 @@ class ErrorAnalyzer():
         self.ds = ds
         self.classes = classes
         self.model_name = model_name
-        self.log_file = os.paht.join('./logs/statistic')
+        self.log_file = os.path.join('./logs/statistic')
         self.conf_mat = self.calc_confusion_mat()
 
     def calc_confusion_mat(self):
