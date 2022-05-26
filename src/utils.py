@@ -27,9 +27,12 @@ class ModelCreator():
                     init_lr=1e-2,
                     decay_steps=200):
 
+
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(n_channels,)),
             self.bit_module,
+            keras.layers.Dense(600),
+            keras.layers.Dropout(.3),
             keras.layers.Dense(n_classes)
         ])
         
