@@ -7,6 +7,7 @@ from tqdm.notebook import tqdm_notebook as tqn
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import sklearn.metrics as sk_metr
 
 class ModelCreator():
     def __init__(self, hub_module_url, model_name):
@@ -160,12 +161,13 @@ def get_train_val_ds(train_dir, val_dir, batch_size=64, img_size=(512,512), seed
     return train_ds, val_ds
 
 
+
 def get_class_weight():
-    url = https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv
+    url = 'https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv'
     df = pd.read_csv(url, index_col=0)
 
     n_train = np.sum(df['train'])
     class_weight = {key:value for
                 key, value in zip(df['color'].index, (n_train/df['train']).round(2))}
 
-    return class_weight
+    return df['color'], class_weight
