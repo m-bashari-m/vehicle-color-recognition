@@ -63,6 +63,7 @@ class ModelCreator():
         check_point = keras.callbacks.ModelCheckpoint(
                                                     filepath=check_point_path,
                                                     monitor='auc',
+                                                    save_best_only=True,
                                                     mode='max')
         
         callbacks = [early_stopping, check_point]
@@ -105,7 +106,7 @@ class ErrorAnalyzer():
         images_dir = os.path.join(self.log_file, 'images')
         os.makedirs(images_dir, exist_ok=True)
         dest = os.path.join(images_dir, self.model_name+'.jpg')
-        plt.savefig(dest, dpi=150)
+        plt.savefig(dest, dpi=200)
         plt.show(block=False)
 
 
@@ -118,7 +119,9 @@ class ErrorAnalyzer():
         with open(csv_output, 'a') as f:
             f.write('color,precision,recall,TP,TN,FP,FN\n')
             for i, class_ in enumerate(self.classes):
+
                 precision, recall = self.get_precision_recall(i)
+
                 f.write("{},{},{},{},{},{},{}\n".format(class_,
                                                         precision,
                                                         recall,
@@ -127,13 +130,13 @@ class ErrorAnalyzer():
                                                         conf_stat.fp[class_],
                                                         conf_stat.fn[class_]))
                                                         
-        print("All done. Check log file {}.".format(self.model_name+'.csv'))
+        print("All done. Check log file => {}".format(self.model_name+'.csv'))
 
             
     def get_precision_recall(self, class_num):
         precision = self.conf_mat[class_num, class_num] / self.conf_mat.sum(axis=0)[class_num]
         recall = self.conf_mat[class_num, class_num] / self.conf_mat.sum(axis=1)[class_num]
-        return precision, recall
+        return round(precision, 3), round(recall, 3)
 
 
 class ConfusionStatistic():
