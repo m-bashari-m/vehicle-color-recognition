@@ -171,21 +171,21 @@ class ConfusionStatistic():
     def __false_positive(self):
         result = dict().fromkeys(self.classes)
         for i, class_ in enumerate(self.classes):
-            result[class_] = np.sum(self.confusion_mat[:, i]) - self.tp
+            result[class_] = np.sum(self.confusion_mat[:, i]) - self.tp[class_]
 
         return result
 
     def __false_negative(self):
         result = dict().fromkeys(self.classes)
         for i, class_ in enumerate(self.classes):
-            result[class_] = np.sum(self.confusion_mat[i, :]) - self.tp
+            result[class_] = np.sum(self.confusion_mat[i, :]) - self.tp[class_]
 
         return result
 
     def __true_negative(self):
         result = dict().fromkeys(self.classes)
         for i, class_ in enumerate(self.classes):
-            result[class_] = np.sum(self.confusion_mat) - self.fp - self.fn + self.tp
+            result[class_] = np.sum(self.confusion_mat) - self.fp[class_] - self.fn[class_] + self.tp[class_]
 
         return result
 
@@ -196,14 +196,14 @@ def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(512,512), seed=
                                                     image_size=img_size,
                                                     shuffle=shuffle,
                                                     label_mode='categorical',
-                                                    batch_size=32,
+                                                    batch_size=batch_size,
                                                     seed=seed)
 
     val_ds = keras.utils.image_dataset_from_directory(val_dir,
                                                   image_size=img_size,
                                                   shuffle=shuffle,
                                                   label_mode='categorical',
-                                                  batch_size=32,
+                                                  batch_size=batch_size,
                                                   seed=seed)
 
     return train_ds, val_ds
