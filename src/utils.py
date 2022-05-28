@@ -91,7 +91,7 @@ class ErrorAnalyzer():
             self.lbls = np.concatenate([self.lbls, tf.argmax(lbl_batch, axis=-1).numpy()]) 
         
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
-
+        np.save(os.path.join(self.log_file, self.model_name+'-confusion.npy'), self.conf_mat)
         return conf_mat
 
     
