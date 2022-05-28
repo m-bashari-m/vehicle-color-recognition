@@ -19,7 +19,7 @@ class ModelCreator():
             keras.metrics.Precision(name="precision"),
             keras.metrics.Recall(name="recall"),
             keras.metrics.AUC(name='auc', curve='PR', multi_label=True),
-            keras.metrics.Accuracy()
+            'accuracy'
         ]
 
     def make_model(self,
@@ -27,7 +27,7 @@ class ModelCreator():
                     img_size=(512,512),
                     n_channels=3,
                     init_lr=1e-2,
-                    decay_steps=200):
+                    decay_steps=500):
 
 
         model = tf.keras.Sequential([
