@@ -9,7 +9,6 @@ from tqdm.notebook import tqdm_notebook as tqdn
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
-import keras.backend as K
 
 class ModelCreator():
     def __init__(self, hub_module_url, model_name):
@@ -34,7 +33,6 @@ class ModelCreator():
             keras.Input(shape=img_size+(n_channels,)),
             self.bit_module,
             keras.layers.Dense(500, activation='relu'),
-            keras.layers.Dropout(.5),
             keras.layers.Dense(n_classes, activation='softmax')
         ])
         
