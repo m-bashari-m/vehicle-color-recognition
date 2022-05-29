@@ -25,10 +25,7 @@ class ModelCreator():
     def make_model(self,
                     n_classes=16,
                     img_size=(512,512),
-                    n_channels=3,
-                    init_lr=1e-2,
-                    decay_steps=500):
-
+                    n_channels=3):
 
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(n_channels,)),
@@ -41,10 +38,10 @@ class ModelCreator():
         model._name = self.model_name
         
         loss_fn = keras.losses.CategoricalCrossentropy()
-        lr_schedule = keras.optimizers.schedules.ExponentialDecay(
-                                                            initial_learning_rate=init_lr,
-                                                            decay_steps=decay_steps,
-                                                            decay_rate=.9)
+
+        boundaries = [2000, 4000, 6000, 8000]
+        values = [5e-2, 1e-2, 5e-3, 1e-3, 5e-4]
+        lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(boundaries, values)
 
         model.compile(loss=loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
@@ -91,7 +88,7 @@ class ErrorAnalyzer():
             self.lbls = np.concatenate([self.lbls, tf.argmax(lbl_batch, axis=-1).numpy()]) 
         
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
-        with open(os.path.join(self.log_file, self.model_name+'-confusion.npy')) as f:
+        with open(os.path.join(self.log_file, self.model_name+'-confusion.npy'), 'wb') as f:
             np.save(f, self.conf_mat)
         return conf_mat
 
