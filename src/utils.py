@@ -86,8 +86,10 @@ class ErrorAnalyzer():
             self.lbls = np.concatenate([self.lbls, tf.argmax(lbl_batch, axis=-1).numpy()]) 
         
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
+        
         with open(os.path.join(self.log_file, self.model_name+'-confusion.npy'), 'wb') as f:
             np.save(f, self.conf_mat)
+            
         return conf_mat
 
     
@@ -103,6 +105,7 @@ class ErrorAnalyzer():
         os.makedirs(images_dir, exist_ok=True)
         dest = os.path.join(images_dir, self.model_name+'.jpg')
         plt.savefig(dest, dpi=200)
+        
         plt.show(block=False)
 
 
