@@ -36,9 +36,7 @@ class ModelCreator():
         
         loss_fn = keras.losses.CategoricalCrossentropy()
 
-        boundaries = [2000, 4000, 6000, 8000]
-        values = [5e-2, 1e-2, 5e-3, 1e-3, 5e-4]
-        lr_schedule = keras.optimizers.schedules.PiecewiseConstantDecay(boundaries, values)
+        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(1e-2, 600, .9)
 
         model.compile(loss=loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
