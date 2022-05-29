@@ -29,7 +29,6 @@ class ModelCreator():
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(n_channels,)),
             self.bit_module,
-            keras.layers.Dense(500, activation='relu'),
             keras.layers.Dense(n_classes, activation='softmax')
         ])
         
