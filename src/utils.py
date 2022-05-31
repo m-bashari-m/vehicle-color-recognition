@@ -29,6 +29,8 @@ class ModelCreator():
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(n_channels,)),
             self.bit_module,
+            keras.layers.Dense(600, activation='relu'),
+            keras.layers.Dropout(.3),
             keras.layers.Dense(n_classes, activation='softmax')
         ])
         
@@ -36,7 +38,7 @@ class ModelCreator():
         
         loss_fn = keras.losses.CategoricalCrossentropy()
 
-        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(1e-2, 600, .9)
+        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(1e-2, 350, .9)
 
         model.compile(loss=loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
