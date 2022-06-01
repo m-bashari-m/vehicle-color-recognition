@@ -66,6 +66,7 @@ class ModelCreator():
                                                     filepath=check_point_path,
                                                     monitor='auc',
                                                     save_best_only=True,
+                                                    save_weights_only=True,
                                                     mode='max')
         
         callbacks = [early_stopping, check_point]
