@@ -47,6 +47,8 @@ class ModelCreator():
         model.compile(loss=loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
                     metrics=self.metrics)
+
+        model.summary()
         
         return model
 
@@ -87,7 +89,6 @@ class ErrorAnalyzer():
         self.conf_mat = self._calc_confusion_mat()
 
 
-    @tf.function
     def _calc_confusion_mat(self):
         print("Making confusion matrix:")
         for img_batch, lbl_batch in tqdn(self.ds):
@@ -97,7 +98,7 @@ class ErrorAnalyzer():
         
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
         
-        # Saving confusion matrix
+        print('Saving confusion matrix')
         str_tensor = tf.strings.format('{}', conf_mat)
         tf.io.write_file(os.path.join(self.log_file, self.model_name+'-conf-mat.tensor'), str_tensor)
 
