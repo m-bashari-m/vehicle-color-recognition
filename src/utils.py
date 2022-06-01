@@ -87,7 +87,6 @@ class ErrorAnalyzer():
         self.conf_mat = self._calc_confusion_mat()
 
 
-#     @tf.function
     def _calc_confusion_mat(self):
         print("Making confusion matrix:")
         for img_batch, lbl_batch in tqdn(self.ds):
