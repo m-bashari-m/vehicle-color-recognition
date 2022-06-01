@@ -11,6 +11,7 @@ import seaborn as sns
 import pandas as pd
 
 class ModelCreator():
+
     def __init__(self, hub_module_url, model_name):
         self.bit_module = hub.KerasLayer(hub_module_url)
         self.model_name = model_name
@@ -21,10 +22,13 @@ class ModelCreator():
             'accuracy'
         ]
 
+
     def make_model(self,
                     n_classes=16,
                     img_size=(512,512),
-                    n_channels=3):
+                    n_channels=3,
+                    decay_step=300,
+                    initial_lr=1e-2):
 
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(n_channels,)),
@@ -38,7 +42,7 @@ class ModelCreator():
         
         loss_fn = keras.losses.CategoricalCrossentropy()
 
-        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(1e-2, 200, .9)
+        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(initial_lr, decay_step, .9)
 
         model.compile(loss=loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
@@ -46,11 +50,13 @@ class ModelCreator():
         
         return model
 
+
     def get_callbacks(self):
         early_stopping = keras.callbacks.EarlyStopping(
                                                     monitor='auc', 
                                                     verbose=1,
-                                                    patience=5,
+                                                    patience=3,
+                                                    restore_best_weights=True,
                                                     mode='max')
 
         check_point_path = os.path.join('./logs/checkpoints', self.model_name+"-{epoch:02d}.h5")
@@ -66,37 +72,43 @@ class ModelCreator():
 
 
 class ErrorAnalyzer():
+
     def __init__(self, model, ds, classes, model_name):
         self.model = model
         self.ds = ds
         self.classes = classes
         self.model_name = model_name
+
+        os.makedirs('./logs/statistic', exist_ok=True)
         self.log_file = os.path.join('./logs/statistic')
+
+        self.lbls = tf.Variable([], dtype=tf.int16)
+        self.preds = tf.Variable([], dtype=tf.int16)
         self.conf_mat = self._calc_confusion_mat()
 
-    def _calc_confusion_mat(self):
-        self.lbls = np.array([])
-        self.preds = np.array([])
 
+    @tf.function
+    def _calc_confusion_mat(self):
         print("Making confusion matrix:")
         for img_batch, lbl_batch in tqdn(self.ds):
             pred = tf.argmax(self.model(img_batch), axis=-1)
-            self.preds = np.concatenate([self.preds, pred.numpy()])
-            self.lbls = np.concatenate([self.lbls, tf.argmax(lbl_batch, axis=-1).numpy()]) 
+            self.preds = tf.concat([self.preds, tf.cast(pred, tf.int16)], axis=0)
+            self.lbls = tf.concat([self.lbls, tf.cast(tf.argmax(lbl_batch, axis=-1), tf.int16)], axis=0)
         
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
         
-        with open(os.path.join(self.log_file, self.model_name+'-confusion.npy'), 'wb') as f:
-            np.save(f, self.conf_mat)
-            
-        return conf_mat
+        # Saving confusion matrix
+        str_tensor = tf.strings.format('{}', conf_mat)
+        tf.io.write_file(os.path.join(self.log_file, self.model_name+'-conf-mat.tensor'), str_tensor)
 
-    
+        return conf_mat
+            
+
     def plot_confusion_mat(self):
-        conf_mat = self.conf_mat.astype('float') / self.conf_mat.sum(axis=1)[:, tf.newaxis]
+        conf_mat = self.conf_mat.astype('float') / self.conf_mat.sum(axis=1)[:, tf.newaxis] * 100
 
         fig, ax = plt.subplots(figsize=(10,10))
-        sns.heatmap(conf_mat, annot=True, fmt='.2f', xticklabels=self.classes, yticklabels=self.classes)
+        sns.heatmap(conf_mat, annot=True, fmt='.1f', xticklabels=self.classes, yticklabels=self.classes)
         plt.ylabel('Actual')
         plt.xlabel('Predicted')
 
@@ -110,23 +122,22 @@ class ErrorAnalyzer():
 
     def evaluate_model(self):
         print("Calculating error type...")
-        conf_stat = ConfusionStatistic(self.conf_mat, self.classes)
+        conf_stats = ConfusionStatistic(self.conf_mat, self.classes)
         
-        csv_output = os.path.join(self.log_file, self.model_name+'.csv')
         print("Writing in log file...")
-        with open(csv_output, 'a') as f:
-            f.write('color,precision,recall,TP,TN,FP,FN\n')
+        with open(os.path.join(self.log_file, self.model_name+'.csv'), 'a') as f:
+            f.write('color,accuracy,precision,recall,TP,TN,FP,FN\n')
+
             for i, class_ in enumerate(self.classes):
-
                 precision, recall = self.get_precision_recall(i)
-
-                f.write("{},{},{},{},{},{},{}\n".format(class_,
+                f.write("{},{},{},{},{},{},{},{}\n".format(class_,
+                                                        conf_stats.accuracy,
                                                         precision,
                                                         recall,
-                                                        conf_stat.tp[class_],
-                                                        conf_stat.tn[class_],
-                                                        conf_stat.fp[class_],
-                                                        conf_stat.fn[class_]))
+                                                        conf_stats.tp[class_],
+                                                        conf_stats.tn[class_],
+                                                        conf_stats.fp[class_],
+                                                        conf_stats.fn[class_]))
                                                         
         print("All done. Check log file => {}".format(self.model_name+'.csv'))
 
@@ -145,6 +156,7 @@ class ConfusionStatistic():
         self._fp = self.__false_positive()
         self._fn = self.__false_negative()
         self._tn = self.__true_negative()
+        self._accuracy= self.__accuracy()
 
     @property
     def tp(self):
@@ -161,6 +173,10 @@ class ConfusionStatistic():
     @property
     def tn(self):
         return self._tn
+
+    @property
+    def accuracy(self):
+        return self._accuracy
 
     def __true_positive(self):
         result = dict().fromkeys(self.classes)
@@ -190,6 +206,9 @@ class ConfusionStatistic():
 
         return result
 
+    def __accuracy(self):
+        return np.sum(np.diagonal(self.confusion_mat)) / np.sum(self.confusion_mat)
+         
 
     
 def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(512,512), seed=42, shuffle=True):
@@ -204,7 +223,7 @@ def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(512,512), seed=
                                                   image_size=img_size,
                                                   shuffle=shuffle,
                                                   label_mode='categorical',
-                                                  batch_size=batch_size,
+                                                  batch_size=batch_size*2,
                                                   seed=seed)
 
     return train_ds, val_ds
