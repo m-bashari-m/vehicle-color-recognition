@@ -86,10 +86,10 @@ class ErrorAnalyzer():
 
         self.lbls = tf.Variable([], dtype=tf.int16)
         self.preds = tf.Variable([], dtype=tf.int16)
-        self.conf_mat = self._calc_confusion_mat()
+        self.conf_mat = self.__calc_confusion_mat()
 
 
-    def _calc_confusion_mat(self):
+    def __calc_confusion_mat(self):
         print("Making confusion matrix:")
         for img_batch, lbl_batch in tqdn(self.ds):
             pred = tf.argmax(self.model(img_batch), axis=-1)
@@ -99,8 +99,8 @@ class ErrorAnalyzer():
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
         
         print('Saving confusion matrix')
-        str_tensor = tf.strings.format('{}', conf_mat)
-        tf.io.write_file(os.path.join(self.log_file, self.model_name+'-conf-mat.tensor'), str_tensor)
+        with open(os.path.join(self.log_file, self.model_name+'-conf-mat.npy'), 'wb') as f:
+            np.save(f, conf_mat)
 
         return conf_mat
             
@@ -122,7 +122,7 @@ class ErrorAnalyzer():
 
 
     def evaluate_model(self):
-        print("Calculating error type...")
+        print("Calculating error types...")
         conf_stats = ConfusionStatistic(self.conf_mat, self.classes)
         
         print("Writing in log file...")
@@ -140,7 +140,7 @@ class ErrorAnalyzer():
                                                         conf_stats.fp[class_],
                                                         conf_stats.fn[class_]))
                                                         
-        print("All done. Check log file => {}".format(self.model_name+'.csv'))
+        print("\033[1;32m All done. Check log file => {}".format(self.model_name+'.csv'))
 
             
     def get_precision_recall(self, class_num):
