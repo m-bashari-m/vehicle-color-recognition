@@ -25,10 +25,11 @@ class ModelCreator():
     def make_model(self,
                     n_classes=16,
                     img_size=(256,256),
-                    n_channels=3,
+                    n_channels=3,               
                     decay_step=300,
                     initial_lr=1e-2):
 
+        # Define the model
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(n_channels,)),
             self.bit_module,
@@ -39,10 +40,9 @@ class ModelCreator():
         
         model._name = self.model_name
         
+        # Compiling
         loss_fn = keras.losses.CategoricalCrossentropy()
-
         lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(initial_lr, decay_step, .9)
-
         model.compile(loss=loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
                     metrics=self.metrics)
@@ -52,6 +52,7 @@ class ModelCreator():
         return model
 
 
+    # Returns EarlyStopping and ModelCheckpoint callbacks
     def get_callbacks(self):
         early_stopping = keras.callbacks.EarlyStopping(
                                                     monitor='auc', 
@@ -79,15 +80,19 @@ class ErrorAnalyzer():
         self.ds = ds
         self.classes = classes
         self.model_name = model_name
-
+        
+        # Path to store images, csv files and confusion matrix array
         os.makedirs('./logs/statistic', exist_ok=True)
         self.log_file = os.path.join('./logs/statistic')
 
+        # labels and predictions from validation dataset
         self.lbls = tf.Variable([], dtype=tf.int16)
         self.preds = tf.Variable([], dtype=tf.int16)
+
         self.conf_mat = self.__calc_confusion_mat()
 
 
+    # Calculates and saves confusion matrix in log file
     def __calc_confusion_mat(self):
         print("Making confusion matrix:")
         for img_batch, lbl_batch in tqdn(self.ds):
@@ -104,6 +109,7 @@ class ErrorAnalyzer():
         return conf_mat
             
 
+    # Calcualtes the percentage of confusion matrix and plot and save
     def plot_confusion_mat(self):
         conf_mat = self.conf_mat.astype('float') / self.conf_mat.sum(axis=1)[:, tf.newaxis] * 100
 
@@ -120,6 +126,9 @@ class ErrorAnalyzer():
         plt.show(block=False)
 
 
+    # Saves some metrics and save them in log file
+    # Metrics are:
+    # Accuracy, Precision, Recall, True/False Positive True/False Negative
     def evaluate_model(self):
         print("Calculating error types...")
         conf_stats = ConfusionStatistic(self.conf_mat, self.classes)
@@ -148,6 +157,9 @@ class ErrorAnalyzer():
         return round(precision, 3), round(recall, 3)
 
 
+# Calculate some metrics for using in ErrorAnalyzer
+# Metrics are:
+# Accuracy, True/False Positive True/False Negative
 class ConfusionStatistic():
     def __init__(self, confusion_mat, classes):
         self.confusion_mat = confusion_mat
@@ -210,7 +222,8 @@ class ConfusionStatistic():
         return np.sum(np.diagonal(self.confusion_mat)) / np.sum(self.confusion_mat)
          
 
-    
+# Returns train and validation dataset
+
 def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(256,256), seed=42, shuffle=True):
     train_ds = keras.utils.image_dataset_from_directory(train_dir,
                                                     image_size=img_size,
@@ -229,7 +242,9 @@ def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(256,256), seed=
     return train_ds, val_ds
 
 
-
+# Download classes information and alculate class weights 
+# Returns classe names in a list and class weights in a dict with 
+#   kyes from 0 to 15
 def get_class_weight():
     url = 'https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv'
     df = pd.read_csv(url, index_col=0)
