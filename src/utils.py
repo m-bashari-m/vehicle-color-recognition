@@ -15,17 +15,16 @@ class ModelCreator():
     def __init__(self, hub_module_url, model_name):
         self.bit_module = hub.KerasLayer(hub_module_url)
         self.model_name = model_name
+
         self.metrics = [
-            keras.metrics.Precision(name="precision"),
-            keras.metrics.Recall(name="recall"),
-            keras.metrics.AUC(name='auc', curve='PR'),
+            keras.metrics.AUC(name='auc', curve='PR', num_thresholds=100),
             'accuracy'
         ]
 
 
     def make_model(self,
                     n_classes=16,
-                    img_size=(512,512),
+                    img_size=(256,256),
                     n_channels=3,
                     decay_step=300,
                     initial_lr=1e-2):
@@ -132,7 +131,7 @@ class ErrorAnalyzer():
             for i, class_ in enumerate(self.classes):
                 precision, recall = self.get_precision_recall(i)
                 f.write("{},{},{},{},{},{},{},{}\n".format(class_,
-                                                        conf_stats.accuracy,
+                                                        round(conf_stats.accuracy, 3),
                                                         precision,
                                                         recall,
                                                         conf_stats.tp[class_],
@@ -212,7 +211,7 @@ class ConfusionStatistic():
          
 
     
-def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(512,512), seed=42, shuffle=True):
+def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(256,256), seed=42, shuffle=True):
     train_ds = keras.utils.image_dataset_from_directory(train_dir,
                                                     image_size=img_size,
                                                     shuffle=shuffle,
