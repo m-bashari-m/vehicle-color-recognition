@@ -154,7 +154,7 @@ class ErrorAnalyzer():
         print("\033[1;32m All done. Check log file => {}".format(self.model_name+'.csv'))
 
         print('Accuracy: %{}'.format(round(conf_stats.accuracy, 4)) * 100)
-        print('Precision mean: {}'.fomat(precision_sum / len(self.classes)))
+        print('Precision mean: {}'.format(precision_sum / len(self.classes)))
         print('Recall mean: {}'.format(recall_sum / len(self.classes)))
     
             
