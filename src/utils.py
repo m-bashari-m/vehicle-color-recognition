@@ -26,7 +26,7 @@ class ModelCreator():
                     n_classes=16,
                     img_size=(256,256),
                     n_channels=3,               
-                    decay_step=300,
+                    decay_step=533,
                     initial_lr=1e-2):
 
         # Define the model
@@ -137,8 +137,11 @@ class ErrorAnalyzer():
         with open(os.path.join(self.log_file, self.model_name+'.csv'), 'a') as f:
             f.write('color,accuracy,precision,recall,TP,TN,FP,FN\n')
 
+            precision_sum, recall_sum = 0, 0
             for i, class_ in enumerate(self.classes):
                 precision, recall = self.get_precision_recall(i)
+                precision_sum += precision
+                recall_sum += recall
                 f.write("{},{},{},{},{},{},{},{}\n".format(class_,
                                                         round(conf_stats.accuracy, 3),
                                                         precision,
@@ -150,6 +153,10 @@ class ErrorAnalyzer():
                                                         
         print("\033[1;32m All done. Check log file => {}".format(self.model_name+'.csv'))
 
+        print('Accuracy: %{}'.format(round(conf_stats.accuracy, 4)) * 100)
+        print('Precision mean: {}'.fomat(precision_sum / len(self.classes)))
+        print('Recall mean: {}'.format(recall_sum / len(self.classes)))
+    
             
     def get_precision_recall(self, class_num):
         precision = self.conf_mat[class_num, class_num] / self.conf_mat.sum(axis=0)[class_num]
