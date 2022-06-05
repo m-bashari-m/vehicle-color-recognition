@@ -25,13 +25,12 @@ class ModelCreator():
     def make_model(self,
                     n_classes=16,
                     img_size=(256,256),
-                    n_channels=3,               
                     decay_step=533,
                     initial_lr=1e-2):
 
         # Define the model
         model = tf.keras.Sequential([
-            keras.Input(shape=img_size+(n_channels,)),
+            keras.Input(shape=img_size+(3,)),
             self.bit_module,
             keras.layers.Dense(600),
             keras.layers.Dropout(.3),
@@ -102,7 +101,7 @@ class ErrorAnalyzer():
         
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
         
-        print('Saving confusion matrix')
+        print('Confusion matrix is saved')
         with open(os.path.join(self.log_file, self.model_name+'-conf-mat.npy'), 'wb') as f:
             np.save(f, conf_mat)
 
@@ -130,7 +129,7 @@ class ErrorAnalyzer():
     # Metrics are:
     # Accuracy, Precision, Recall, True/False Positive True/False Negative
     def evaluate_model(self):
-        print("Calculating error types...")
+        print("Calculateing error types...")
         conf_stats = ConfusionStatistic(self.conf_mat, self.classes)
         
         print("Writing in log file...")
