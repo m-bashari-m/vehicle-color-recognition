@@ -12,7 +12,6 @@ def rest_request(img_batch, url=None):
 
 
 dir = input("Enter image's directory path: ")
-print(os.listdir(dir))
 dataset = tf.keras.utils.image_dataset_from_directory(dir,
                                                       label_mode=None,
                                                       image_size=(256, 256))
