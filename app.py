@@ -1,15 +1,21 @@
+import os
+# preventing tensorflow verbose
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import requests 
 import tensorflow as tf
 import json
 import pandas as pd
 
+# get class names
 def get_classes():
     url = 'https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv'
     df = pd.read_csv(url, index_col=0)
 
     return df['color']
 
-
+# img_batch: 4 dimentional tensor
+# returns request.Response
 def rest_request(img_batch, url=None):
     url = 'http://localhost:8501/v1/models/saved_model:predict'
 
@@ -18,7 +24,21 @@ def rest_request(img_batch, url=None):
     return response
 
 
+def print_predictions_info(preds_per_class, classes):
+    n_sharps = 20
+    print(n_sharps*'#', 'Total Predictions Info', n_sharps*'#')
+    for i in range(len(classes)):
+        print(classes[i],'   \t=>', preds_per_class[i], '   \t|', end='')
+        
+        if (i+1) % 2 == 0:
+            print()
+
+    print()
+
+
 classes = get_classes().to_list()
+
+# get images in the specified directory
 dir = input("Enter image's directory path: ")
 dataset = tf.keras.utils.image_dataset_from_directory(dir,
                                                       label_mode=None,
@@ -38,6 +58,4 @@ for img_batch in dataset:
         prediction_per_class[index] += 1
         files_index += 1
 
-print('\n###### Total Predictions Info ######')
-for i in range(len(classes)):
-    print(prediction_per_class[i], 'image(s) predicted as', classes[i])
+print_predictions_info(prediction_per_class, classes)
