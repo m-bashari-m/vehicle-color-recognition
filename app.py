@@ -6,6 +6,7 @@ import requests
 import tensorflow as tf
 import json
 import pandas as pd
+import argparse
 
 # get class names
 def get_classes():
@@ -39,8 +40,7 @@ def print_predictions_info(preds_per_class, classes):
 classes = get_classes().to_list()
 
 # get images in the specified directory
-dir = input("Enter image's directory path: ")
-dataset = tf.keras.utils.image_dataset_from_directory(dir,
+dataset = tf.keras.utils.image_dataset_from_directory('/data',
                                                       label_mode=None,
                                                       image_size=(256, 256),
                                                       shuffle=False)
