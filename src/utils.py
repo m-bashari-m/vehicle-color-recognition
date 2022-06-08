@@ -109,7 +109,7 @@ class ErrorAnalyzer():
             
 
     # Calcualtes the percentage of confusion matrix and plot and save
-    def plot_confusion_mat(self, show_plot=False):
+    def plot_confusion_mat(self):
         conf_mat = self.conf_mat.astype('float') / self.conf_mat.sum(axis=1)[:, tf.newaxis] * 100
 
         fig, ax = plt.subplots(figsize=(10,10))
@@ -153,7 +153,7 @@ class ErrorAnalyzer():
                                                         
         print("\033[1;32mAll done. Check log file => {}".format(self.model_name+'.csv'))
 
-        print('\033[30mAccuracy: %{}'.format(round(conf_stats.accuracy, 4)* 100))
+        print('Accuracy: %{}'.format(round(conf_stats.accuracy, 4)* 100))
         print('Precision mean: {}'.format(precision_sum / len(self.classes)))
         print('Recall mean: {}'.format(recall_sum / len(self.classes)))
     

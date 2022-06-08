@@ -8,8 +8,6 @@ ENV data='./data'
 
 RUN mkdir /data
 
-ADD data/ /data
-
 COPY app.py ./app.py
 
 CMD [ "python3", "app.py" ]
