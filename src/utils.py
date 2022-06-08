@@ -1,5 +1,3 @@
-from abc import abstractmethod
-from pydoc import classname
 import tensorflow as tf
 from tensorflow import keras
 import os
@@ -9,6 +7,7 @@ from tqdm.notebook import tqdm_notebook as tqdn
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class ModelCreator():
 
@@ -73,10 +72,11 @@ class ModelCreator():
 
 
 class ErrorAnalyzer():
-
+    
     def __init__(self, model, ds, classes, model_name):
         self.model = model
         self.ds = ds
+        self.file_paths = np.array(ds.file_paths)
         self.classes = classes
         self.model_name = model_name
         
@@ -87,7 +87,7 @@ class ErrorAnalyzer():
         # labels and predictions from validation dataset
         self.lbls = tf.Variable([], dtype=tf.int16)
         self.preds = tf.Variable([], dtype=tf.int16)
-
+        
         self.conf_mat = self.__calc_confusion_mat()
 
 
@@ -98,7 +98,7 @@ class ErrorAnalyzer():
             pred = tf.argmax(self.model(img_batch), axis=-1)
             self.preds = tf.concat([self.preds, tf.cast(pred, tf.int16)], axis=0)
             self.lbls = tf.concat([self.lbls, tf.cast(tf.argmax(lbl_batch, axis=-1), tf.int16)], axis=0)
-        
+
         conf_mat = tf.math.confusion_matrix(self.lbls, self.preds).numpy()
         
         print('Confusion matrix is saved')
@@ -162,7 +162,56 @@ class ErrorAnalyzer():
         recall = self.conf_mat[class_num, class_num] / self.conf_mat.sum(axis=1)[class_num]
         return round(precision, 3), round(recall, 3)
 
+    
+    def plot_missclassified(self, base_class, n_cols=4, n_rows=4):
+        row, col = 0, 0
+        plt.figure(figsize=(17,17))
+        for class_ in self.classes:
+            if col == n_cols:
+                col = 0
+                row += 1
 
+            frame = self.__a_predicted_as_b(base_class, class_)
+            plt.subplot(n_rows, n_cols, row*n_cols + col + 1)
+            plt.title(f'{base_class} predicted as {class_}')
+            plt.imshow(frame)
+            plt.axis('off')
+
+            col += 1
+
+    def __make_frame(self, paths, size=200, n_cols=2, n_rows=2):
+        frame = np.zeros([n_rows*size, n_cols*size, 3])
+        row, col = 0, 0
+        for path in paths:
+            image = tf.image.decode_image(tf.io.read_file(path), expand_animations=False)
+            image = tf.image.resize(image, (size, size))
+
+            if col == n_cols:
+                row += 1
+                col = 0
+
+            try:
+                frame[row*size:(row+1)*size, col*size:(col+1)*size, :] = tf.cast(image, tf.float32) / 255.0
+            except Exception as ex:
+                return frame
+
+            col +=1
+
+        return frame
+
+    def __a_predicted_as_b(self, class_a, class_b, image_in_frame=4):
+        class_a_num = self.classes.index(class_a)
+        class_b_num = self.classes.index(class_b)
+        target_paths = self.file_paths[(self.lbls == class_a_num) & (self.preds == class_b_num)]
+        if len(target_paths) < image_in_frame:
+            frame = self.__make_frame(target_paths)
+        else:
+            frame = self.__make_frame(target_paths[:4])
+
+        return frame
+
+    
+            
 # Calculate some metrics for using in ErrorAnalyzer
 # Metrics are:
 # Accuracy, True/False Positive True/False Negative
@@ -240,7 +289,7 @@ def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(256,256), seed=
 
     val_ds = keras.utils.image_dataset_from_directory(val_dir,
                                                   image_size=img_size,
-                                                  shuffle=shuffle,
+                                                  shuffle=False,
                                                   label_mode='categorical',
                                                   batch_size=batch_size*2,
                                                   seed=seed)
