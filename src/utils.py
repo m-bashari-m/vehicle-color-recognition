@@ -311,4 +311,8 @@ def get_class_weight():
     return df['color'], class_weight
 
 
-
+def get_model(model_name):
+    base_path = './drive/MyDrive/checkpoints'
+    path = os.path.join(base_path, model_name)
+    model = tf.keras.models.load_model(path, cusotm_objects={'KerasLayer': hub.KerasLayer})
+    return model
