@@ -109,7 +109,7 @@ class ErrorAnalyzer():
             
 
     # Calcualtes the percentage of confusion matrix and plot and save
-    def plot_confusion_mat(self):
+    def plot_confusion_mat(self, show_plot=False):
         conf_mat = self.conf_mat.astype('float') / self.conf_mat.sum(axis=1)[:, tf.newaxis] * 100
 
         fig, ax = plt.subplots(figsize=(10,10))
@@ -122,7 +122,8 @@ class ErrorAnalyzer():
         dest = os.path.join(images_dir, self.model_name+'.jpg')
         plt.savefig(dest, dpi=200)
         
-        plt.show(block=False)
+        if show_plot:
+            plt.show(block=False)
 
 
     # Saves some metrics and save them in log file
@@ -150,9 +151,9 @@ class ErrorAnalyzer():
                                                         conf_stats.fp[class_],
                                                         conf_stats.fn[class_]))
                                                         
-        print("\033[1;32m All done. Check log file => {}".format(self.model_name+'.csv'))
+        print("\033[1;32mAll done. Check log file => {}".format(self.model_name+'.csv'))
 
-        print('Accuracy: %{}'.format(round(conf_stats.accuracy, 4)* 100))
+        print('\033[30mAccuracy: %{}'.format(round(conf_stats.accuracy, 4)* 100))
         print('Precision mean: {}'.format(precision_sum / len(self.classes)))
         print('Recall mean: {}'.format(recall_sum / len(self.classes)))
     
@@ -179,7 +180,7 @@ class ErrorAnalyzer():
 
             col += 1
 
-    def __make_frame(self, paths, size=200, n_cols=2, n_rows=2):
+    def __make_frame(self, paths, size=200, n_cols=3, n_rows=3):
         frame = np.zeros([n_rows*size, n_cols*size, 3])
         row, col = 0, 0
         for path in paths:
@@ -199,14 +200,14 @@ class ErrorAnalyzer():
 
         return frame
 
-    def __a_predicted_as_b(self, class_a, class_b, image_in_frame=4):
+    def __a_predicted_as_b(self, class_a, class_b, images_in_frame=9):
         class_a_num = self.classes.index(class_a)
         class_b_num = self.classes.index(class_b)
         target_paths = self.file_paths[(self.lbls == class_a_num) & (self.preds == class_b_num)]
-        if len(target_paths) < image_in_frame:
+        if len(target_paths) < images_in_frame:
             frame = self.__make_frame(target_paths)
         else:
-            frame = self.__make_frame(target_paths[:4])
+            frame = self.__make_frame(target_paths[:images_in_frame])
 
         return frame
 
@@ -291,7 +292,7 @@ def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(256,256), seed=
                                                   image_size=img_size,
                                                   shuffle=False,
                                                   label_mode='categorical',
-                                                  batch_size=batch_size*2,
+                                                  batch_size=batch_size,
                                                   seed=seed)
 
     return train_ds, val_ds
@@ -314,5 +315,5 @@ def get_class_weight():
 def get_model(model_name):
     base_path = './drive/MyDrive/checkpoints'
     path = os.path.join(base_path, model_name)
-    model = tf.keras.models.load_model(path, cusotm_objects={'KerasLayer': hub.KerasLayer})
+    model = tf.keras.models.load_model(path, custom_objects={'KerasLayer': hub.KerasLayer})
     return model
