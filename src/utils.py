@@ -122,8 +122,7 @@ class ErrorAnalyzer():
         dest = os.path.join(images_dir, self.model_name+'.jpg')
         plt.savefig(dest, dpi=200)
         
-        if show_plot:
-            plt.show(block=False)
+        plt.show(block=False)
 
 
     # Saves some metrics and save them in log file
