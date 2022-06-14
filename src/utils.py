@@ -31,8 +31,6 @@ class ModelCreator():
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(3,)),
             self.bit_module,
-            keras.layers.Dense(600),
-            keras.layers.Dropout(.3),
             keras.layers.Dense(n_classes, activation='softmax')
         ])
         
@@ -122,8 +120,7 @@ class ErrorAnalyzer():
         dest = os.path.join(images_dir, self.model_name+'.jpg')
         plt.savefig(dest, dpi=200)
         
-        if show_plot:
-            plt.show(block=False)
+        plt.show(block=False)
 
 
     # Saves some metrics and save them in log file
@@ -154,8 +151,8 @@ class ErrorAnalyzer():
         print("\033[1;32mAll done. Check log file => {}".format(self.model_name+'.csv'))
 
         print('Accuracy: %{}'.format(round(conf_stats.accuracy, 4)* 100))
-        print('Precision mean: {}'.format(precision_sum / len(self.classes)))
-        print('Recall mean: {}'.format(recall_sum / len(self.classes)))
+        print('Precision mean: {}'.format(round(precision_sum / len(self.classes), 4)))
+        print('Recall mean: {}'.format(round(recall_sum / len(self.classes), 4)))
     
             
     def get_precision_recall(self, class_num):
