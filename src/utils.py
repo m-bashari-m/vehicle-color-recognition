@@ -71,10 +71,10 @@ class ModelCreator():
 
 class ErrorAnalyzer():
     
-    def __init__(self, model, ds, classes, model_name):
+    def __init__(self, model, ds, file_paths, classes, model_name):
         self.model = model
         self.ds = ds
-        self.file_paths = np.array(ds.file_paths)
+        self.file_paths = np.array(file_paths)
         self.classes = classes
         self.model_name = model_name
         
