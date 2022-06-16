@@ -6,6 +6,8 @@ import requests
 import tensorflow as tf
 import json
 import pandas as pd
+import subprocess
+import re
 
 # get class names
 def get_classes():
@@ -16,13 +18,11 @@ def get_classes():
 
 # img_batch: 4 dimentional tensor
 # returns request.Response
-def rest_request(img_batch, url=None):
+def rest_request(img_batch):
     url = 'http://localhost:8501/v1/models/saved_model:predict'
-
     payload = json.dumps({'instances': img_batch.numpy().tolist()})
     response = requests.post(url, payload)
     return response
-
 
 def print_predictions_info(preds_per_class, classes):
     n_sharps = 20
@@ -38,8 +38,8 @@ def print_predictions_info(preds_per_class, classes):
 
 classes = get_classes().to_list()
 
-dir = input('path: ')
-dataset = tf.keras.utils.image_dataset_from_directory(dir,
+
+dataset = tf.keras.utils.image_dataset_from_directory('/data',
                                                       label_mode=None,
                                                       image_size=(256, 256),
                                                       shuffle=False)
@@ -51,6 +51,7 @@ files_index = 0
 for img_batch in dataset:
     result = rest_request(img_batch)
     result = result.json()
+    print(result)
     indexes = tf.argmax(result['predictions'], axis=1)
     for index in indexes:
         print(files[files_index], '\tpredicted as', classes[index])
