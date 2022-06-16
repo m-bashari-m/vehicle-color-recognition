@@ -198,8 +198,8 @@ class ErrorAnalyzer():
         return frame
 
     def __a_predicted_as_b(self, class_a, class_b, images_in_frame=9):
-        class_a_num = self.classes.index(class_a)
-        class_b_num = self.classes.index(class_b)
+        class_a_num = list(self.classes).index(class_a)
+        class_b_num = list(self.classes).index(class_b)
         target_paths = self.file_paths[(self.lbls == class_a_num) & (self.preds == class_b_num)]
         if len(target_paths) < images_in_frame:
             frame = self.__make_frame(target_paths)
