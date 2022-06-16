@@ -36,7 +36,7 @@ This is the model architecture which uses [R50x1](https://tfhub.dev/google/bit/s
 <img src="images/architecture.png"
      alt="Markdown Monster icon"/>
 
-# How To Use The Model
+# How To Use This Model
 ### 1. Install Docker
 This model is going to serve with [tensorflow serving](https://www.tensorflow.org/tfx/guide/serving), thus you need to install docker.
 
@@ -59,21 +59,33 @@ cd vehicle-color-recognition
 ```bash
 docker pull tensorflow/serving
 ```
-
-### 4. Run TensorFlow Serving
+### 4. Create A Docker Network
 ```bash
-docker run -it --rm -p 8501:8501 \
-            -v /path/to/vehicle-color-recognition/saved_model:/models/${model-name} \
-            -e MODEL_NAME=${model-name} \
-            tensorflow/serving
+docker network create model-net
+```
+### 5. Run TensorFlow Serving
+```bash
+docker run -it --rm  \
+           -v /path/to/vehicle-color-recognition/saved_model:/models/saved_model \
+           -e MODEL_NAME=saved_model \
+           --name tf-serving \
+           --net model-net  \
+           tensorflow/serving
 ```
 
-For example:
+### 6. Build App Image
 ```bash
-docker run -it --rm -p 8501:8501 \
-            -v ~/vehicle-color-recognition/saved_model:/models/saved_model \
-            -e MODEL_NAME=saved_model \
-            tensorflow/serving
+docker build -t vcor .
+```
+### 7. Run App
+Followig command will run the app.
+```bash
+docker run -it --rm -v /path/to/data:/data --net model-net vcor
 ```
 
-### 5. Run App
+### 8. Get TF-Serving Container IP Address
+Run following command to get tf-serving conatiner IP address. This IP is going to be used to create url to send request.
+```bash
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tf-serving
+```
+Copy and paste the result in the running app.

@@ -18,8 +18,8 @@ def get_classes():
 
 # img_batch: 4 dimentional tensor
 # returns request.Response
-def rest_request(img_batch):
-    url = 'http://localhost:8501/v1/models/saved_model:predict'
+def rest_request(img_batch, ip, url):
+    
     payload = json.dumps({'instances': img_batch.numpy().tolist()})
     response = requests.post(url, payload)
     return response
@@ -34,28 +34,69 @@ def print_predictions_info(preds_per_class, classes):
             print()
 
     print()
+
+def get_dataset():
+    try:
+        dataset = tf.keras.utils.image_dataset_from_directory('/data',
+                                                        label_mode=None,
+                                                        image_size=(256, 256),
+                                                        shuffle=False)
+    except Exception as ex:
+        print('Data are unavailable.')
+        print('Make sure to specify accurate data path and re-run the container.')
+        raise Exception(str(ex))
+
+    files = [file.split('/')[-1] for file in dataset.file_paths]
+
+    dataset = dataset.map(lambda img: img/255., num_parallel_calls=tf.data.AUTOTUNE)
+
+    return dataset, files
     
 
-classes = get_classes().to_list()
+def get_ip():
+    print('Run following command to get tf-serving container ip.')
+    print("\tdocker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tf-serving")
+    ip = input('Enter the result: ')
+    return ip
 
 
-dataset = tf.keras.utils.image_dataset_from_directory('/data',
-                                                      label_mode=None,
-                                                      image_size=(256, 256),
-                                                      shuffle=False)
+def predict(dataset, classes, files):
+    prediction_per_class = tf.zeros(shape=len(classes), dtype=tf.int32).numpy()
+    files_index = 0
 
-files = [file.split('/')[-1] for file in dataset.file_paths]
-prediction_per_class = tf.zeros(shape=len(classes), dtype=tf.int32).numpy()
-files_index = 0
+    ip = get_ip()
+    url = f'http://{ip}:8501/v1/models/saved_model:predict'
+    print('Request has been sent to', url)
+    print('Wait for response...')
 
-for img_batch in dataset:
-    result = rest_request(img_batch)
-    result = result.json()
-    print(result)
-    indexes = tf.argmax(result['predictions'], axis=1)
-    for index in indexes:
-        print(files[files_index], '\tpredicted as', classes[index])
-        prediction_per_class[index] += 1
-        files_index += 1
+    n_sharps = 20
+    print(n_sharps*'#', 'Result', n_sharps*'#')
+    for img_batch in dataset:
+        result = rest_request(img_batch, ip, url)
+        result = result.json()
+        try:
+            indexes = tf.argmax(result['predictions'], axis=1)
+        except:
+            print('Following error occurred:')
+            print(result['erro'])
+            raise Exception('Server failure')
 
-print_predictions_info(prediction_per_class, classes)
+        for index in indexes:
+            print(files[files_index], '\tpredicted as', classes[index])
+            prediction_per_class[index] += 1
+            files_index += 1
+    
+    return prediction_per_class
+
+
+def main():
+    classes = get_classes().to_list()
+    try:
+        dataset, files = get_dataset()
+        preds_per_classes = predict(dataset, classes, files)
+    except Exception as ex:
+        print(str(ex))
+        return
+    print_predictions_info(preds_per_classes, classes)
+
+main()
