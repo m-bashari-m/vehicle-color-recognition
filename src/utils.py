@@ -1,3 +1,4 @@
+from sklearn import metrics
 import tensorflow as tf
 from tensorflow import keras
 import os
@@ -37,9 +38,9 @@ class ModelCreator():
         model._name = self.model_name
         
         # Compiling
-        loss_fn = keras.losses.CategoricalCrossentropy()
+        self.loss_fn = keras.losses.CategoricalCrossentropy()
         lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(initial_lr, decay_step, .9)
-        model.compile(loss=loss_fn,
+        model.compile(loss=self.loss_fn,
                     optimizer=keras.optimizers.Adam(learning_rate=lr_schedule),
                     metrics=self.metrics)
 
@@ -66,6 +67,12 @@ class ModelCreator():
         
         callbacks = [early_stopping, check_point]
         return callbacks
+
+    def re_compile(self, model, lr=5e-4):
+        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(lr, 500, .9)
+        model.compile(loss=self.loss_fn,
+                      metrics=self.metrics,
+                      optimizer=keras.optimizers.Adam(learning_rate=lr_schedule))
 
 
 
