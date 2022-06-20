@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
-from PIL import Image
 
 class ModelCreator():
 
@@ -52,16 +51,15 @@ class ModelCreator():
     # Returns EarlyStopping and ModelCheckpoint callbacks
     def get_callbacks(self):
         early_stopping = keras.callbacks.EarlyStopping(
-                                                    monitor='auc', 
+                                                    monitor='val_auc', 
                                                     verbose=1,
-                                                    patience=3,
-                                                    restore_best_weights=True,
+                                                    patience=4,
                                                     mode='max')
 
-        check_point_path = os.path.join('./logs/checkpoints', self.model_name+"-{epoch:02d}.h5")
+        check_point_path = os.path.join('./logs/checkpoints', self.model_name+".h5")
         check_point = keras.callbacks.ModelCheckpoint(
                                                     filepath=check_point_path,
-                                                    monitor='auc',
+                                                    monitor='val_auc',
                                                     save_best_only=True,
                                                     mode='max')
         
@@ -73,6 +71,16 @@ class ModelCreator():
         model.compile(loss=self.loss_fn,
                       metrics=self.metrics,
                       optimizer=keras.optimizers.Adam(learning_rate=lr_schedule))
+
+    def plot_history(history, metric, title):
+        plt.plot(history.history[metric])
+        plt.plot(history.history['val'+metric])
+        plt.title('accuracy')
+        plt.ylabel(metric)
+        plt.xlabel('#epoch')
+        plt.legend(['train', 'val'])
+        plt.show()
+
 
 
 
@@ -177,12 +185,13 @@ class ErrorAnalyzer():
                 row += 1
 
             frame = self.__a_predicted_as_b(base_class, class_)
-            Image.fromarray(frame).save('{}-{}-{}.jpeg'.format(self.model_name, base_class, class_))
             plt.subplot(n_rows, n_cols, row*n_cols + col + 1)
             plt.title(f'{base_class} predicted as {class_}')
             plt.imshow(frame)
             plt.axis('off')
             col += 1
+
+        plt.savefig('{}-{}.jpeg'.format(self.model_name, base_class))
 
     def __make_frame(self, paths, size=200, n_cols=3, n_rows=3):
         frame = np.zeros([n_rows*size, n_cols*size, 3])
@@ -215,7 +224,7 @@ class ErrorAnalyzer():
 
         return frame
 
-    
+
             
 # Calculate some metrics for using in ErrorAnalyzer
 # Metrics are:
