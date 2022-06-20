@@ -1,4 +1,3 @@
-from sklearn import metrics
 import tensorflow as tf
 from tensorflow import keras
 import os
@@ -9,6 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
+from PIL import Image
 
 class ModelCreator():
 
@@ -177,11 +177,11 @@ class ErrorAnalyzer():
                 row += 1
 
             frame = self.__a_predicted_as_b(base_class, class_)
+            Image.fromarray(frame).save('{}-{}-{}.jpeg'.format(self.model_name, base_class, class_))
             plt.subplot(n_rows, n_cols, row*n_cols + col + 1)
             plt.title(f'{base_class} predicted as {class_}')
             plt.imshow(frame)
             plt.axis('off')
-
             col += 1
 
     def __make_frame(self, paths, size=200, n_cols=3, n_rows=3):
