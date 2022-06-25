@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 class ModelCreator():
 
     def __init__(self, hub_module_url, model_name):
-        self.bit_module = hub.KerasLayer(hub_module_url)
+        self.hub_module_url = hub_module_url
         self.model_name = model_name
 
         self.metrics = [
@@ -22,15 +22,16 @@ class ModelCreator():
 
 
     def make_model(self,
+                    trainable=True,
                     n_classes=16,
                     img_size=(256,256),
-                    decay_step=533,
-                    initial_lr=1e-2):
+                    decay_step=500,
+                    initial_lr=1e-3):
 
         # Define the model
         model = tf.keras.Sequential([
             keras.Input(shape=img_size+(3,)),
-            self.bit_module,
+            hub.KerasLayer(self.hub_module_url, trainable=trainable),
             keras.layers.Dense(n_classes, activation='softmax')
         ])
         
@@ -53,7 +54,7 @@ class ModelCreator():
         early_stopping = keras.callbacks.EarlyStopping(
                                                     monitor='val_auc', 
                                                     verbose=1,
-                                                    patience=4,
+                                                    patience=5,
                                                     mode='max')
 
         check_point_path = os.path.join('./logs/checkpoints', self.model_name+".h5")
@@ -65,17 +66,13 @@ class ModelCreator():
         
         callbacks = [early_stopping, check_point]
         return callbacks
+        
 
-    def re_compile(self, model, lr=5e-4):
-        lr_schedule =tf.keras.optimizers.schedules.ExponentialDecay(lr, 500, .9)
-        model.compile(loss=self.loss_fn,
-                      metrics=self.metrics,
-                      optimizer=keras.optimizers.Adam(learning_rate=lr_schedule))
-
-    def plot_history(history, metric, title):
+    @staticmethod
+    def plot_history(history, metric):
         plt.plot(history.history[metric])
         plt.plot(history.history['val'+metric])
-        plt.title('accuracy')
+        plt.title(metric)
         plt.ylabel(metric)
         plt.xlabel('#epoch')
         plt.legend(['train', 'val'])
