@@ -52,15 +52,15 @@ class ModelCreator():
     # Returns EarlyStopping and ModelCheckpoint callbacks
     def get_callbacks(self):
         early_stopping = keras.callbacks.EarlyStopping(
-                                                    monitor='val_auc', 
+                                                    monitor='val_accuracy', 
                                                     verbose=1,
-                                                    patience=5,
+                                                    patience=8,
                                                     mode='max')
 
         check_point_path = os.path.join('./logs/checkpoints', self.model_name+".h5")
         check_point = keras.callbacks.ModelCheckpoint(
                                                     filepath=check_point_path,
-                                                    monitor='val_auc',
+                                                    monitor='val_accuracy',
                                                     save_best_only=True,
                                                     mode='max')
         
@@ -71,7 +71,7 @@ class ModelCreator():
     @staticmethod
     def plot_history(history, metric):
         plt.plot(history.history[metric])
-        plt.plot(history.history['val'+metric])
+        plt.plot(history.history['val_'+metric])
         plt.title(metric)
         plt.ylabel(metric)
         plt.xlabel('#epoch')
