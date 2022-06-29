@@ -66,20 +66,8 @@ class ModelCreator():
         
         callbacks = [early_stopping, check_point]
         return callbacks
+
         
-
-    @staticmethod
-    def plot_history(history, metric):
-        plt.plot(history.history[metric])
-        plt.plot(history.history['val_'+metric])
-        plt.title(metric)
-        plt.ylabel(metric)
-        plt.xlabel('#epoch')
-        plt.legend(['train', 'val'])
-        plt.show()
-
-
-
 
 class ErrorAnalyzer():
     
