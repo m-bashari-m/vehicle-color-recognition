@@ -82,10 +82,3 @@ Followig command will run the app.
 ```bash
 docker run -it --rm -v /path/to/data:/data --net model-net vcor
 ```
-
-### 8. Get TF-Serving Container IP Address
-Run following command to get tf-serving conatiner IP address. This IP is going to be used to create url to send request.
-```bash
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tf-serving
-```
-Copy and paste the result in the running app.

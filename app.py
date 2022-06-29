@@ -18,7 +18,7 @@ def get_classes():
 
 # img_batch: 4 dimentional tensor
 # returns request.Response
-def rest_request(img_batch, ip, url):
+def rest_request(img_batch, url):
     
     payload = json.dumps({'instances': img_batch.numpy().tolist()})
     response = requests.post(url, payload)
@@ -51,28 +51,20 @@ def get_dataset():
     dataset = dataset.map(lambda img: img/255., num_parallel_calls=tf.data.AUTOTUNE)
 
     return dataset, files
-    
-
-def get_ip():
-    print('Run following command to get tf-serving container ip.')
-    print("\tdocker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tf-serving")
-    ip = input('Enter the result: ')
-    return ip
 
 
 def predict(dataset, classes, files):
     prediction_per_class = tf.zeros(shape=len(classes), dtype=tf.int32).numpy()
     files_index = 0
 
-    ip = get_ip()
-    url = f'http://{ip}:8501/v1/models/saved_model:predict'
+    url = f'http://tf-serving:8501/v1/models/saved_model:predict'
     print('Request has been sent to', url)
     print('Wait for response...')
 
     n_sharps = 20
     print(n_sharps*'#', 'Result', n_sharps*'#')
     for img_batch in dataset:
-        result = rest_request(img_batch, ip, url)
+        result = rest_request(img_batch, url)
         result = result.json()
         try:
             indexes = tf.argmax(result['predictions'], axis=1)
