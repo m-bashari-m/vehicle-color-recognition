@@ -176,7 +176,7 @@ class ErrorAnalyzer():
             plt.axis('off')
             col += 1
 
-        plt.savefig('./logs/images/{}-{}.jpeg'.format(self.model_name, base_class))
+        plt.savefig('./logs/statistic/images/{}-{}.jpeg'.format(self.model_name, base_class))
 
     def __make_frame(self, paths, size=200, n_cols=3, n_rows=3):
         frame = np.zeros([n_rows*size, n_cols*size, 3])
