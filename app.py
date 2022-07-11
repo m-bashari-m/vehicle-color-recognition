@@ -1,94 +1,98 @@
+from logging import WARNING
 import os
-# preventing tensorflow verbose
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 import requests 
-import tensorflow as tf
 import json
-import pandas as pd
-import subprocess
-import re
+import numpy as np
+from PIL import Image
+from flask import Flask, render_template, request, jsonify
 
-# get class names
-def get_classes():
-    url = 'https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv'
-    df = pd.read_csv(url, index_col=0)
+app = Flask(__name__)
 
-    return df['color']
+CLASSES = np.array(["beige", "black", "blue",
+                    "brown", "cream", "crimson",
+                    "gold", "green", "grey",
+                    "navy-blue", "ornage", "red",
+                    "silver", "titanium", "white",
+                    "yellow"])
 
-# img_batch: 4 dimentional tensor
-# returns request.Response
-def rest_request(img_batch, url):
-    
-    payload = json.dumps({'instances': img_batch.numpy().tolist()})
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+'''
+img_batch: 4 dimentional array
+returns request.Response
+'''
+def rest_request(img_batch: np.ndarray, url: str):
+    payload = json.dumps({'instances': img_batch.tolist()})
     response = requests.post(url, payload)
+    
     return response
 
-def print_predictions_info(preds_per_class, classes):
-    n_sharps = 20
-    print(n_sharps*'#', 'Total Predictions Info', n_sharps*'#')
-    for i in range(len(classes)):
-        print(classes[i],'   \t=>', preds_per_class[i], '   \t|', end='')
-        
-        if (i+1) % 2 == 0:
-            print()
-
-    print()
-
-def get_dataset():
+'''
+returns:
+   images: All images in directory in 4 dimentions which are normalized
+   files: All file names corresponding to images. It uses for response
+'''
+def get_dataset(img_size: tuple, dir='/data'): 
     try:
-        dataset = tf.keras.utils.image_dataset_from_directory('/data',
-                                                        label_mode=None,
-                                                        image_size=(256, 256),
-                                                        shuffle=False)
-    except Exception as ex:
-        print('Data are unavailable.')
-        print('Make sure to specify accurate data path and re-run the container.')
-        raise Exception(str(ex))
+        files = os.listdir(dir)
+        paths = [os.path.join(dir, file) for file in files]
+    except Exception:
+        raise Exception('Data not found. Make sure to specify accurate data path and re-run the container.')
+    else:
+        if len(files) == 0:
+            raise Exception('There is no image in this directory')
 
-    files = [file.split('/')[-1] for file in dataset.file_paths]
+    images = np.array([]).reshape(-1, *img_size, 3)
+    
+    for i, path in enumerate(paths) :
+        try:
+            image = Image.open(path).resize(img_size)
+            image_arr = np.array(image, dtype=np.float64) / 255.
+            image_arr = np.expand_dims(image_arr, 0)
+            images = np.concatenate([images, image_arr], axis=0)
+        except:
+            files.pop(i)
 
-    dataset = dataset.map(lambda img: img/255., num_parallel_calls=tf.data.AUTOTUNE)
+    return images, files
 
-    return dataset, files
-
-
-def predict(dataset, classes, files):
-    prediction_per_class = tf.zeros(shape=len(classes), dtype=tf.int32).numpy()
-    files_index = 0
-
+'''
+params:
+   dataset: 4 dimentional array which includes normalized images
+   fiels: List of file names
+'''
+def get_prediction(dataset: np.ndarray, files: list):
     url = f'http://tf-serving:8501/v1/models/saved_model:predict'
     print('Request has been sent to', url)
-    print('Wait for response...')
+    print('Waiting for response...')
 
-    n_sharps = 20
-    print(n_sharps*'#', 'Result', n_sharps*'#')
-    for img_batch in dataset:
-        result = rest_request(img_batch, url)
-        result = result.json()
-        try:
-            indexes = tf.argmax(result['predictions'], axis=1)
-        except:
-            print('Following error occurred:')
-            print(result['erro'])
-            raise Exception('Server failure')
-
-        for index in indexes:
-            print(files[files_index], '\tpredicted as', classes[index])
-            prediction_per_class[index] += 1
-            files_index += 1
+    result = rest_request(dataset, url)
+    result = result.json()
     
-    return prediction_per_class
-
-
-def main():
-    classes = get_classes().to_list()
     try:
-        dataset, files = get_dataset()
-        preds_per_classes = predict(dataset, classes, files)
-    except Exception as ex:
-        print(str(ex))
-        return
-    print_predictions_info(preds_per_classes, classes)
+        indexes = np.argmax(result['predictions'], axis=1)
+    except:
+        raise Exception(result['error'])
 
-main()
+    result_dict = dict(zip(files, CLASSES[indexes]))
+    
+    return jsonify(result_dict)
+    
+
+@app.route('/predict', methods=['GET'])
+def predict():
+    IMG_SIZE = (256, 256)
+    try:
+        dataset, files = get_dataset(IMG_SIZE)
+        response = get_prediction(dataset, files)
+        print("Prediction results are available at localhost:8080/predict")
+        return response, 200
+
+    except Exception as ex:
+        error = {'error': str(ex)}
+        print("Operation failed. You can find the error message in localhost:8080/predict")
+        return jsonify(error), 400
+
+if __name__ == '__main__':
+    app.run(port=8080, host="0.0.0.0")
