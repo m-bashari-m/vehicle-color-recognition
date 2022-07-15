@@ -63,7 +63,7 @@ params:
    fiels: List of file names
 '''
 def get_prediction(dataset: np.ndarray, files: list):
-    url = f'http://tf-serving:8501/v1/models/saved_model:predict'
+    url = 'http://tf-serving:8501/v1/models/vcor:predict'
     print('Request has been sent to', url)
     print('Waiting for response...')
 

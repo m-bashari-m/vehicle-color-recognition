@@ -31,19 +31,32 @@ There are 16 classes as below:
 
 
 ## Architecture
-This is the model architecture which uses [R50x1](https://tfhub.dev/google/bit/s-r50x1/1) tensorflow hub layer for feature extraction.
+I have used 3 model architecture which use[R50x1](https://tfhub.dev/google/bit/s-r50x1/1) tensorflow hub layer for feature extraction. 
 
-<img src="images/architecture.png"
+### RGB Architecture
+<img src="images/rgb.png"
      alt="Markdown Monster icon"/>
+
+### Combination of RGB, XYZ and HSV (v1)
+<img src="images/model-v1.png"
+     alt="Markdown Monster icon"/>
+
+### Combination of RGB, XYZ and HSV (v2)
+<img src="images/model-v1.png"
+     alt="Markdown Monster icon"/>
+
+
+Among these three architectures, the RGB model has the best result, so the final architecture is the first one (i.e. RGB Architecture)
+
 
 # How To Use This Model
 ### 1. Install Docker
 This model is going to serve with [tensorflow serving](https://www.tensorflow.org/tfx/guide/serving), thus you need to install docker.
 
 These are docker installation instruction for:
-* [Docker for Windows ](https://docs.docker.com/desktop/windows/install/)
-* [Docker for Linux](https://docs.docker.com/desktop/linux/install/)
-* [Docker for macOS](https://docs.docker.com/desktop/mac/install/)
+* [Windows ](https://docs.docker.com/desktop/windows/install/)
+* [Linux](https://docs.docker.com/desktop/linux/install/)
+* [macOS](https://docs.docker.com/desktop/mac/install/)
 
 ### 2. Clone The Project
 ```bash
@@ -66,8 +79,8 @@ docker network create model-net
 ### 5. Run TensorFlow Serving
 ```bash
 docker run -it --rm  \
-           -v /path/to/vehicle-color-recognition/saved_model:/models/saved_model \
-           -e MODEL_NAME=saved_model \
+           -v /path/to/vehicle-color-recognition/vcor:/models/vcor \
+           -e MODEL_NAME=vcor \
            --name tf-serving \
            --net model-net  \
            tensorflow/serving
@@ -80,5 +93,5 @@ docker build -t vcor .
 ### 7. Run App
 Followig command will run the app.
 ```bash
-docker run -it --rm -v /path/to/data:/data --net model-net vcor
+docker run -it --rm -p 8080:8080 -v /path/to/data:/data --net model-net vcor
 ```
