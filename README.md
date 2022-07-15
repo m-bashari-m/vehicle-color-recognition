@@ -95,3 +95,7 @@ Followig command will run the app.
 ```bash
 docker run -it --rm -p 8080:8080 -v /path/to/data:/data --net model-net vcor
 ```
+
+### 8. Get Predictions
+Finally use the following link to get predictions:
+[`http://localhost:8080`](http://localhost:8080)

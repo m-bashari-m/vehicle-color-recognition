@@ -1,10 +1,9 @@
-from logging import WARNING
 import os
 import requests 
 import json
 import numpy as np
 from PIL import Image
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
 
@@ -47,12 +46,13 @@ def get_dataset(img_size: tuple, dir='/data'):
     images = np.array([]).reshape(-1, *img_size, 3)
     
     for i, path in enumerate(paths) :
+        # Omits files with wrong format
         try:
             image = Image.open(path).resize(img_size)
             image_arr = np.array(image, dtype=np.float64) / 255.
             image_arr = np.expand_dims(image_arr, 0)
             images = np.concatenate([images, image_arr], axis=0)
-        except:
+        except:     
             files.pop(i)
 
     return images, files
@@ -76,7 +76,6 @@ def get_prediction(dataset: np.ndarray, files: list):
         raise Exception(result['error'])
 
     result_dict = dict(zip(files, CLASSES[indexes]))
-    
     return jsonify(result_dict)
     
 
