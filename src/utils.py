@@ -300,7 +300,7 @@ def get_train_val_ds(train_dir, val_dir,batch_size=32, img_size=(256,256), seed=
 # Returns classe names in a list and class weights in a dict with 
 #   kyes from 0 to 15
 def get_class_weight():
-    url = 'https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info.csv'
+    url = 'https://raw.githubusercontent.com/m-bashari-m/vehicle-color-recognition/main/logs/dataset-info-v2.csv'
     df = pd.read_csv(url, index_col=0)
 
     n_train = np.sum(df['train'])
