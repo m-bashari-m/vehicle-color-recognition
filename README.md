@@ -16,33 +16,33 @@ There are 16 classes as below:
 |2     |black    |1235 |298       |1533 |
 |3     |blue     |1102 |275       |1377 |
 |4     |brown    |951  |237       |1188 |
-|5     |cream    |300  |33        |333  |
-|6     |crimson  |223  |9         |232  |
-|7     |gold     |300  |25        |325  |
+|5     |cream    |900  |33        |933  |
+|6     |crimson  |892  |9         |901  |
+|7     |gold     |900  |25        |925  |
 |8     |green    |804  |46        |850  |
 |9     |grey     |1373 |343       |1716 |
-|10    |navy-blue|290  |45        |335  |
+|10    |navy-blue|870  |45        |915  |
 |11    |orange   |762  |47        |809  |
 |12    |red      |1040 |259       |1299 |
 |13    |silver   |845  |211       |1056 |
-|14    |titanium |300  |54        |354  |
+|14    |titanium |900  |54        |954  |
 |15    |white    |5744 |1435      |7179 |
 |16    |yellow   |824  |54        |878  |
 
 
 ## Architecture
-I have used 3 model architecture which use[R50x1](https://tfhub.dev/google/bit/s-r50x1/1) tensorflow hub layer for feature extraction. 
+I have used 3 model architecture which use [R50x1](https://tfhub.dev/google/bit/s-r50x1/1) tensorflow hub layer for feature extraction. 
 
 ### RGB Architecture
-<img src="images/rgb.png"
+<img src="images/architectures/rgb.png"
      alt="Markdown Monster icon"/>
 
-### Combination of RGB, XYZ and HSV (v1)
-<img src="images/model-v1.png"
+### Combination of RGB, XYZ and HSV (combined-v1)
+<img src="images/architectures/combined-v1.png"
      alt="Markdown Monster icon"/>
 
-### Combination of RGB, XYZ and HSV (v2)
-<img src="images/model-v1.png"
+### Combination of RGB, XYZ (combined-v2)
+<img src="images/architectures/combined-v2.png"
      alt="Markdown Monster icon"/>
 
 
@@ -79,7 +79,7 @@ docker network create model-net
 ### 5. Run TensorFlow Serving
 ```bash
 docker run -it --rm  \
-           -v /path/to/vehicle-color-recognition/vcor:/models/vcor \
+           -v /path/to/vehicle-color-recognition/model:/models/vcor \
            -e MODEL_NAME=vcor \
            --name tf-serving \
            --net model-net  \
@@ -98,4 +98,5 @@ docker run -it --rm -p 8080:8080 -v /path/to/data:/data --net model-net vcor
 
 ### 8. Get Predictions
 Finally use the following link to get predictions:
+
 [`http://localhost:8080`](http://localhost:8080)
